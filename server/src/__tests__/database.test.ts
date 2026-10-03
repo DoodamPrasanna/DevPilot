@@ -13,7 +13,7 @@ describe('database connection diagnostics', () => {
     const uri = 'mongodb+srv://demo-user:demo-password@cluster.example/devpilot';
     const connectionError = Object.assign(
       new Error(`Authentication failed for demo-user:demo-password at ${uri}`),
-      { name: 'MongoServerSelectionError', code: 'ETIMEDOUT' },
+      { name: 'MongoServerSelectionError', code: 'ETIMEDOUT', codeName: 'AuthenticationFailed' },
     );
     const connect = vi.spyOn(mongoose, 'connect').mockRejectedValue(connectionError);
     const errorLog = vi.spyOn(logger, 'error').mockImplementation(() => {});
@@ -29,7 +29,10 @@ describe('database connection diagnostics', () => {
     expect(errorLog).toHaveBeenCalledWith('MongoDB connection failed', {
       mongoErrorName: 'MongoServerSelectionError',
       mongoErrorCode: 'ETIMEDOUT',
+      mongoErrorCodeName: 'AuthenticationFailed',
       mongoErrorMessage: 'Authentication failed for [REDACTED]:[REDACTED] at [REDACTED_MONGODB_URI]',
+      serverSelectionTimeoutMs: 8_000,
+      connectTimeoutMs: 8_000,
     });
     const loggedDiagnostics = JSON.stringify(errorLog.mock.calls);
     expect(loggedDiagnostics).not.toContain(uri);

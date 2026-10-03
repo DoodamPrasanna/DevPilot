@@ -4,6 +4,8 @@ import { env } from './env.js';
 import { logger } from '../utils/logger.js';
 
 let connectionPromise: Promise<typeof mongoose> | undefined;
+const SERVER_SELECTION_TIMEOUT_MS = 8_000;
+const CONNECT_TIMEOUT_MS = 8_000;
 
 function sanitizedMongoError(error: unknown, uri: string): Record<string, string | number> {
   const details = typeof error === 'object' && error !== null ? error as Record<string, unknown> : {};
@@ -37,11 +39,15 @@ function sanitizedMongoError(error: unknown, uri: string): Record<string, string
   const name = typeof details.name === 'string' ? details.name : 'UnknownMongoError';
   const message = typeof details.message === 'string' ? details.message : 'Unknown MongoDB error';
   const code = details.code;
+  const codeName = details.codeName;
 
   return {
     mongoErrorName: sanitize(name),
     ...(typeof code === 'string' || typeof code === 'number' ? { mongoErrorCode: typeof code === 'string' ? sanitize(code) : code } : {}),
+    ...(typeof codeName === 'string' ? { mongoErrorCodeName: sanitize(codeName) } : {}),
     mongoErrorMessage: sanitize(message),
+    serverSelectionTimeoutMs: SERVER_SELECTION_TIMEOUT_MS,
+    connectTimeoutMs: CONNECT_TIMEOUT_MS,
   };
 }
 
@@ -59,7 +65,10 @@ export async function connectDatabase(uri = env.MONGODB_URI): Promise<typeof mon
   }
 
   connectionPromise = mongoose
-    .connect(uri, { serverSelectionTimeoutMS: 8_000, connectTimeoutMS: 8_000 })
+    .connect(uri, {
+      serverSelectionTimeoutMS: SERVER_SELECTION_TIMEOUT_MS,
+      connectTimeoutMS: CONNECT_TIMEOUT_MS,
+    })
     .then(() => mongoose)
     .catch((error: unknown) => {
       logger.error('MongoDB connection failed', sanitizedMongoError(error, uri));

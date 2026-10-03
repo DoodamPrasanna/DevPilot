@@ -7,11 +7,7 @@ import { env } from './config/env.js';
 import { logger } from './utils/logger.js';
 
 export async function startServer() {
-  try {
-    await connectDatabase();
-  } catch {
-    logger.warn('MongoDB is unavailable; starting HTTP server in degraded mode');
-  }
+  await connectDatabase();
 
   const app = createApp();
 
