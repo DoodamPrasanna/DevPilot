@@ -15,6 +15,7 @@ describe('DevPilot backend foundation', () => {
       success: true,
       status: 'ok',
       service: 'devpilot-server',
+      database: 'unavailable',
     });
   });
 

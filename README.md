@@ -159,14 +159,14 @@ No deployment has been run. Deploy only after supplying your own provider accoun
 
 Create a Node web service using the repository root as the working directory (this is an npm-workspaces monorepo):
 
-- Build command: `npm ci && npm run build --workspace server`
+- Build command: `npm ci --include=dev && npm run build --workspace server`
 - Start command: `npm run start --workspace server`
 - Health check path: `/api/v1/health`
 - Use a current Node 22 runtime.
 
 Set `NODE_ENV=production`, `MONGODB_URI`, a cryptographically random `JWT_SECRET` of at least 32 characters, and `FRONTEND_URL` to the exact deployed frontend origin. Set `GEMINI_API_KEY` to enable AI features; `GEMINI_MODEL`, `GEMINI_EMBEDDING_MODEL`, and `ATLAS_VECTOR_INDEX_NAME` may be set when customizing their defaults. Add bounded indexing/retrieval variables only if the defaults need adjustment. Do not put secrets in source control or client settings.
 
-The server connects to MongoDB before it starts listening. The health endpoint reports API process health; it is not a separate Atlas Vector Search readiness check. Render's `PORT` is honored by the server.
+The server attempts to connect to MongoDB with an 8-second timeout before listening. If MongoDB is unavailable, it logs sanitized connection diagnostics and still starts in degraded mode; `/api/v1/health` reports the database as `unavailable` until connected. Render's `PORT` is honored by the server.
 
 ### 3. Frontend on Vercel
 
